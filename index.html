@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Mycollegecodes by henriquedeandrade</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Mycollegecodes</h1>
+        <h2>Programs I made while I&#39;m in college</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/henriquedeandrade/MyCollegeCodes/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/henriquedeandrade/MyCollegeCodes/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/henriquedeandrade/MyCollegeCodes" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <p>Hu3 Team GPU610 - Seneca College</p>
+
+<p>== Progress ==
+=== Assignment 1 ===
+====Bruno's Findings====
+I started off with this simple heat equation</p>
+
+<p>It's interesting because the calculation involves taking the average between each matrix element's neighbour(north, south, east and west) and keeps on doing it over and over again until you get a precise calculation(when the biggest difference between the new calculated element and the older is smaller than the defined Epsilon error margin).
+Like this you are able to get a nice heat dispersion calculation.</p>
+
+<p>I was worried about data dependency, since, as I said, each element depends on each other to be calculated. But this solution uses 2 matrix, one old and one new, where the new matrix will receive the average value of the old matrix and, if the difference is still bigger than epsilon, then the old matrix receives the values of the new matrix and the whole iteration happens again, where the new matrix  is going to receive the average values of the old matrix, that now holds the most recent values.</p>
+
+<p>So this is a good candidate for parallelization because we can send each iteration of the average calculation to a different GPU thread and since this is a simple average calculation, the GPU will be able to do it.
+Running with a 1000x1000 matrix, with a epsilon error factor of  0.001, the program took almost 5 minutes to run completely and 99% of the time was on the getHeat() method (the heat calculation core).</p>
+
+<p><img src="http://zenit.senecac.on.ca/wiki/imgs/Execution-NO_CUDA.JPG" alt=""></p>
+
+<p>====Carlos's Findings====</p>
+
+<p>The array processing is a good choice and it is used in many applications, for example game development and image processing. It can calculate the transformation of a game world scene and its objects; besides, add filters on images as we can see in mobile apps such as Instagram.</p>
+
+<p>It is a good candidate because it operates simple and repetitive calculations that can be divide among CUDA processors.</p>
+
+<p>====Conclusion====</p>
+
+<p>After analyzing both solutions and their applications, we have chosen the Heat Equation because of the number of different algorithms that we can find to solve array processing problems, such as CBLAS and cuBLAS. Due to the possibility of doing something that is not often done, we will work with the Heat Equation during this semester.</p>
+
+<p>=== Assignment 2 ===
+====CUDA Coding====
+Based on assignment 1, we added the source code to make possible the program to be executed on a CUDA device, as follows.</p>
+
+<pre>
+
+__global__ void copyMat(const double *w, double *u){
+
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (i  *d || d_array[i + x] &gt; *d){
+
+            if (d_array[i] &gt; d_array[i + x])
+
+                *d = d_array[i];
+
+            else
+
+                *d = d_array[i + x];
+
+        }
+
+        __syncthreads();
+
+    }
+
+}
+
+</pre>
+
+<p>Moreover, we made the input of the error tolerance (Epsilon) to be set on the code. After lots of difficulties found while we were coding, we finally got good results in comparison with the code of assignment 1. The runtime was decreased, and it made us to see the power that CUDA may provide to optimize the processing.</p>
+
+<p>=== Assignment 3 ===</p>
+
+<p>====CUDA Coding====
+Based on assignment 2, we made optimizations to speed up the execution, as follows.</p>
+
+<pre>
+__global__ void copyMat(const float *w, float *u){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = blockIdx.y * blockDim.y + threadIdx.y;
+    if (i 0 &amp;&amp; ty &gt; 0 ) &amp;&amp; ( i  *d || d_array[i + x] &gt; *d){
+            if (d_array[i] &gt; d_array[i + x])
+                *d = d_array[i];
+            else
+                *d = d_array[i + x];
+        }
+        __syncthreads();
+    }
+}
+</pre>
+
+<p>We made use of shared memory to speed up the memory access for the kernel, along with coalesced memory access. We were already doing a simple reduction for getting the biggest difference, but with these tow optimizations alone we were able to get a speed up of almost 50% from the first not-optimized CUDA solution.
+Because the code works getting neighboring elements from the matrix, we had to make a bigger check on the heat calculation part, to avoid illegal memory access.</p>
+
+<p>====Comparing the results====
+As a result of the source code included, it was possible to reduce the processing time. </p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
